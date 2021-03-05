@@ -23,6 +23,7 @@ package edu.nmsu.cs.webserver;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -51,20 +52,40 @@ public class WebWorker implements Runnable {
 	public void run() {
 		System.err.println("Handling connection...");
 		try {
+			byte[] parsedHTML;
+			String contentType = "text/html";
 			InputStream is = socket.getInputStream();
 			OutputStream os = socket.getOutputStream();
 			// Grabs the request URL from the headers
 			String requestURL = readHTTPRequest(is);
-			// Parses the HTML with the tags.
-			byte[] parsedHTML = parseHTML(requestURL);
+
+			// Big case to determine what type of file to set the content type too and if
+			// not an image it's regualr HTML
+			if (requestURL.indexOf(".png", 0) != -1) {
+				parsedHTML = parseImage(requestURL);
+				contentType = "image/png";
+			} else if (requestURL.indexOf(".gif", 0) != -1) {
+				parsedHTML = parseImage(requestURL);
+				contentType = "image/gif";
+			} else if (requestURL.indexOf(".jpg", 0) != -1) {
+				parsedHTML = parseImage(requestURL);
+				contentType = "image/jpeg";
+			} else if (requestURL.indexOf(".ico", 0) != -1) {
+				parsedHTML = parseImage(requestURL);
+				contentType = "image/x-icon";
+			} else {
+				parsedHTML = parseHTML(requestURL);
+			}
+
 			// Checks to see if the file exists so that the headers can return the correct
 			// status code.
 			String resHeader = "200 OK";
 			if (!fileExists(requestURL)) {
 				resHeader = "404 Not Found";
+				contentType = "text/html";
 			}
 			// Added a option to plug in the header from the last step.
-			writeHTTPHeader(os, "text/html", resHeader);
+			writeHTTPHeader(os, contentType, resHeader);
 			// Added a way to take in the parsed html from the previous function
 			writeContent(os, parsedHTML);
 			os.flush();
@@ -118,7 +139,7 @@ public class WebWorker implements Runnable {
 		os.write("Date: ".getBytes());
 		os.write((df.format(d)).getBytes());
 		os.write("\n".getBytes());
-		os.write("Server: Jon's very own server\n".getBytes());
+		os.write("Server: Cameron's very own server\n".getBytes());
 		// os.write("Last-Modified: Wed, 08 Jan 2003 23:11:55 GMT\n".getBytes());
 		// os.write("Content-Length: 438\n".getBytes());
 		os.write("Connection: close\n".getBytes());
@@ -135,9 +156,6 @@ public class WebWorker implements Runnable {
 	 * @param os is the OutputStream object to write to
 	 **/
 	private void writeContent(OutputStream os, byte[] parsedHTMl) throws Exception {
-		// os.write("<html><head></head><body>\n".getBytes());
-		// os.write("<h3>My web server works!</h3>\n".getBytes());
-		// os.write("</body></html>\n".getBytes());
 		os.write(parsedHTMl);
 		return;
 	}
@@ -162,7 +180,7 @@ public class WebWorker implements Runnable {
 				Date d = new Date();
 				DateFormat df = DateFormat.getDateInstance();
 				line = line.replace("<cs371date>", df.format(d));
-				line = line.replace("<cs371server>", "Camerons' Server");
+				line = line.replace("<cs371server>", "Cameron's Server");
 				finalHTML += line;
 			}
 			reader.close();
@@ -171,7 +189,23 @@ public class WebWorker implements Runnable {
 		}
 
 		return finalHTML.getBytes();
-	}
+	}// end parseHTML
+
+	// Function to parse the image and deliver it to the user.
+	private byte[] parseImage(String url) {
+		byte[] finalImage;
+		url = url.replaceFirst("/", "");
+		try {
+			// Used https://www.tutorialspoint.com/java/java_files_io.htm as reference for
+			// reading all bytes of files
+			FileInputStream file = new FileInputStream(url);
+			finalImage = file.readAllBytes();
+			file.close();
+		} catch (Exception e) {
+			return "<html><head></head><body>\n<h3>404 Not Found</h3>\n</body></html>\n".getBytes();
+		}
+		return finalImage;
+	}// end parseImage
 
 	// Method checks to see if a file exists so the header function know what to
 	// return 200 or 404
@@ -179,6 +213,6 @@ public class WebWorker implements Runnable {
 		url = url.replaceFirst("/", "");
 		File checkFile = new File(url);
 		return checkFile.exists();
-	}
+	}// end fileExists
 
 } // end class

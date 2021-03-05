@@ -1,4 +1,4 @@
-<project name="SimpleWebServer" default="build" basedir=".">
+<project name="SimpleWebServer" default="run" basedir=".">
 
     <property name="dest" location="bin/" />
     <property name="src" location="src/edu/nmsu/cs/webserver/" />
@@ -12,8 +12,8 @@
         <javac srcdir="${src}" destdir="${dest}" />
     </target>
 
-    <target name="run" description="Runs the WebServer">
-        <java classpath="${dest}" classname="edu.nmsu.cs.webserver.WebServer" />
+    <target name="run" depends="build" description="Runs the WebServer">
+        <java dir="www" classpath="${dest}" classname="edu.nmsu.cs.webserver.WebServer" fork="true" />
     </target>
 
 </project>

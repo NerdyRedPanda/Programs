@@ -1,0 +1,10 @@
+1. I think it will take about 1 hour to complete this program.
+
+2.
+Thought/Design: 15min
+Programming: 40min
+Debugging: 20min
+TOTAL: 1 hour 15 min
+
+3.
+It took about 15 minutes more than I expected to complete this project.
