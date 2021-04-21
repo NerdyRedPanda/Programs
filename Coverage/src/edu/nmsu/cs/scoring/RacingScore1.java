@@ -39,7 +39,8 @@ public class RacingScore1
 	{
 		int s;
 		if (score1 < score2)
-			s = score2;
+			//Fixed problem when 2 scores share the same value
+			s = score1;
 		else
 			s = score1;
 		if (s > score3)
